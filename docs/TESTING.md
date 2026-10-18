@@ -26,7 +26,50 @@ exits cleanly; the server console always shows `[Plugin:ChoomCoop]` lines.
 
 ---
 
-## How to install the dev build into the game
+## Quick setup: ChoomCoopSetup.exe (recommended for testers)
+
+One exe installs everything for a tester. Build it on the dev PC:
+
+```
+xmake -y -j 4
+xmake install -y -o distrib
+.\Mods\ChoomCoop\Installer\build.ps1
+```
+
+Output: `Mods\ChoomCoop\Installer\dist\ChoomCoopSetup.exe` (about 20 MB). It contains our
+CyberpunkMP build, the ChoomCoop scripts and the server. It downloads the six frameworks
+(table below) from their official GitHub releases and checks each SHA-256 before installing.
+
+What it does (game closed, Steam game folder found automatically, or it asks for the path):
+1. Installs RED4ext, redscript, Codeware, ArchiveXL, TweakXL and Input Loader at the pinned
+   versions. Any file it overwrites is backed up to `%LOCALAPPDATA%\ChoomCoop\backup\`.
+2. Disables CET if present (`version.dll` -> `version.dll.choomcoop-off`).
+3. Installs `red4ext\plugins\zzzCyberpunkMP\` and `r6\scripts\ChoomCoop\`.
+4. Asks **host or guest**. Guests enter the host's IP. Creates `Play Choom Co-op.bat` on the
+   Desktop (`--online --ip=<host> --port=11778`).
+5. Host only: installs the server to `%LOCALAPPDATA%\ChoomCoop\server\` and creates
+   `Start Choom Co-op Server.bat` on the Desktop. The server needs the .NET 8 runtime.
+
+It never touches saves. `ChoomCoopSetup.exe --uninstall` removes the mod and both
+launchers and turns CET back on (the frameworks stay; other mods use them). Log:
+`%LOCALAPPDATA%\ChoomCoop\setup.log`.
+
+The exe is unsigned, so Windows SmartScreen will warn ("More info" -> "Run anyway") and
+some antivirus may flag it.
+
+**Connecting over the internet.** The friend's game must reach the host's UDP port 11778.
+Easiest: both install [Tailscale](https://tailscale.com), join the same tailnet, and the
+guest uses the host's `100.x.y.z` Tailscale IP. Alternative: forward UDP 11778 on the
+host's router to the host PC and give the guest your public IP. Either way, allow
+`Server.Loader.exe` through Windows Firewall when asked, for **private and public**
+networks (Tailscale can show up as either). Windows blocks ping by default, so `ping`
+failing proves nothing; use `tailscale ping <host>`.
+
+**Steam launch.** The Play launcher starts `Cyberpunk2077.exe` directly; Steam must be
+running. If the game ignores the flags, put `--online --ip=<host> --port=11778` in Steam ->
+Cyberpunk 2077 -> Properties -> Launch Options instead and start it from Steam.
+
+## How to install the dev build into the game (manual)
 
 **Prerequisites (once, both PCs).** Game patch **2.31** plus exactly these versions, from
 each project's GitHub releases page (links in `README.md`; Input Loader is

@@ -2,6 +2,18 @@
 
 Short log: date, decision, why, alternatives.
 
+## 2026-10-18 — Tester installer: ChoomCoopSetup.exe
+- **Decision:** a self-contained single-file .NET console app (`Mods/ChoomCoop/Installer`)
+  that embeds our build and downloads the six frameworks from their official releases with
+  pinned SHA-256s. No admin rights. The exe is a build output and is not committed.
+- **Why:** testers need the exact framework versions and correct folder layout; downloading
+  instead of bundling keeps third-party binaries out of our artifact; hashes stop a changed
+  upstream asset from installing silently.
+- **License:** our build is a modified CyberpunkMP, so the exe must be distributed only via
+  our public GitHub (e.g. a Release on the fork) or our own site, never a mod site.
+- **Alternatives:** PowerShell script (needs execution-policy changes on the friend's PC);
+  bundling the frameworks (bigger, redistributes others' binaries); the fork's launcher.
+
 ## 2026-10-18 — Target game patch 2.31; port fixes from Night City Online selectively
 - **Decision:** stay on upstream CyberpunkMP and port only the game-compatibility and crash
   fixes from `ofmiceandcam98-eng/CyberpunkMP` (branch `phase0/patch-2.31`):

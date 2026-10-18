@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- Dev-test installer. Build with Mods/ChoomCoop/Installer/build.ps1, which first packs
+         payload/payload.zip from the xmake install output (distrib/). -->
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>ChoomCoopSetup</AssemblyName>
+        <Version>0.0.1</Version>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <SelfContained>true</SelfContained>
+        <PublishSingleFile>true</PublishSingleFile>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+        <PublishTrimmed>true</PublishTrimmed>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="payload\payload.zip" LogicalName="payload.zip" Condition="Exists('payload\payload.zip')" />
+    </ItemGroup>
+
+</Project>
