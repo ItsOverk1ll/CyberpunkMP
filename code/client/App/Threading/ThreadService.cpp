@@ -8,5 +8,9 @@ void ThreadService::RunInMainThread(std::function<void()> aFunc)
 
 void ThreadService::OnGameUpdate(RED4ext::CGameApplication* apApp)
 {
-    m_queue.Drain();
+    // ChoomCoop: run each task outside the queue lock (Drain() holds it), so a task may
+    // queue another without deadlocking. See docs/DECISIONS.md.
+    std::function<void()> func;
+    while (m_queue.Pop(func))
+        func();
 }

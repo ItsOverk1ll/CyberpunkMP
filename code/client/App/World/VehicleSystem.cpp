@@ -13,6 +13,7 @@
 #include "App/Components/AttachedComponent.h"
 #include "App/Components/SpawningComponent.h"
 #include "App/Components/InterpolationComponent.h"
+#include "App/Threading/ThreadService.h"
 
 
 void VehicleSystem::OnWorldAttached(RED4ext::world::RuntimeScene* aScene)
@@ -55,7 +56,30 @@ std::optional<Red::EntityID> VehicleSystem::GetVehicleGameId() const
     return m_vehicleGameId;
 }
 
+// ChoomCoop: OnVehicleEnter/Exit/Ready are called from redscript, which the engine may run
+// on a job thread. They query and modify the flecs world, which is single-threaded, so each
+// one defers its body to the main thread (same pattern as the animation hook in
+// InterpolationSystem.cpp). All three are deferred so enter/exit keep their order.
+// Diagnosis credit: ofmiceandcam98-eng/CyberpunkMP 0fa2bb9. See docs/DECISIONS.md.
 void VehicleSystem::OnVehicleEnter(Red::EntityID aVehicle, const Red::TweakDBID& aVehicleTdbid, Red::CName aName, const Red::Vector4& aPostion, const Red::Quaternion& aOrientation)
+{
+    ThreadService::RunInMainThread([self = Red::Handle(this), aVehicle, aVehicleTdbid, aName, aPostion, aOrientation]
+    {
+        self->OnVehicleEnterMainThread(aVehicle, aVehicleTdbid, aName, aPostion, aOrientation);
+    });
+}
+
+void VehicleSystem::OnVehicleExit()
+{
+    ThreadService::RunInMainThread([self = Red::Handle(this)] { self->OnVehicleExitMainThread(); });
+}
+
+void VehicleSystem::OnVehicleReady(const Red::EntityID& aVehicleEntityId)
+{
+    ThreadService::RunInMainThread([self = Red::Handle(this), aVehicleEntityId] { self->OnVehicleReadyMainThread(aVehicleEntityId); });
+}
+
+void VehicleSystem::OnVehicleEnterMainThread(Red::EntityID aVehicle, const Red::TweakDBID& aVehicleTdbid, Red::CName aName, const Red::Vector4& aPostion, const Red::Quaternion& aOrientation)
 {
     spdlog::info("[VehicleSystem] OnVehicleEnter");
     const auto pNetworkService = Core::Container::Get<NetworkService>();
@@ -93,7 +117,7 @@ void VehicleSystem::OnVehicleEnter(Red::EntityID aVehicle, const Red::TweakDBID&
     pNetworkService->Send(request);
 }
 
-void VehicleSystem::OnVehicleExit()
+void VehicleSystem::OnVehicleExitMainThread()
 {
     m_vehicleGameId = std::nullopt;
     m_vehicleRemoteId = std::nullopt;
@@ -178,7 +202,7 @@ bool VehicleSystem::HandleVehicleEnterMessage(const PacketEvent<server::NotifyVe
     return true;
 }
 
-void VehicleSystem::OnVehicleReady(const Red::EntityID& aVehicleEntityId)
+void VehicleSystem::OnVehicleReadyMainThread(const Red::EntityID& aVehicleEntityId)
 {
     spdlog::info("[VehicleSystem] OnVehicleReady");
 

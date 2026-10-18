@@ -32,6 +32,11 @@ protected:
 
     void DoMount(flecs::entity aCharacter, Red::EntityID aVehicle, Red::CName aSit);
 
+    // ChoomCoop: bodies of OnVehicleEnter/Exit/Ready, run on the main thread.
+    void OnVehicleEnterMainThread(Red::EntityID aVehicle, const Red::TweakDBID& aVehicleTdbid, Red::CName aName, const Red::Vector4& aPostion, const Red::Quaternion& aOrientation);
+    void OnVehicleExitMainThread();
+    void OnVehicleReadyMainThread(const Red::EntityID& aVehicleEntityId);
+
 private:
     bool m_ready{false};
     Core::Map<Red::EntityID, Vector<PacketEvent<server::NotifyVehicleEnter>>> m_pendingMounts;
