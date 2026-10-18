@@ -53,8 +53,16 @@ RED4EXT_C_EXPORT bool Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason a
         App::GApplication->Bootstrap();
 
         const auto scriptPath = GCyberpunkMpLocation / TP_REDSCRIPT_LOCATION;
-        const wchar_t* scriptLocation = canonical(scriptPath).c_str();
-        aSdk->scripts->Add(aHandle, scriptLocation);
+        // ChoomCoop: name the missing folder before canonical() throws (otherwise RED4ext only
+        // says the plugin failed and the game silently runs without the mod), and keep the
+        // canonical path alive: .c_str() on the temporary read freed memory.
+        // Credit: ofmiceandcam98-eng/CyberpunkMP 58881c8.
+        std::error_code scriptEc;
+        if (!std::filesystem::exists(scriptPath, scriptEc))
+            aSdk->logger->ErrorF(aHandle, "CyberpunkMP cannot find its redscript folder at '%s' - the mod will not load.", scriptPath.string().c_str());
+
+        const auto scriptLocation = canonical(scriptPath);
+        aSdk->scripts->Add(aHandle, scriptLocation.c_str());
 
         ArchiveXL::RegisterArchives(canonical(GCyberpunkMpLocation / TP_ARCHIVES_LOCATION));
         TweakXL::RegisterTweaks(canonical(GCyberpunkMpLocation / TP_TWEAKS_LOCATION));
@@ -63,8 +71,8 @@ RED4EXT_C_EXPORT bool Main(RED4ext::PluginHandle aHandle, RED4ext::EMainReason a
         void(*pInputLoaderAdd)(RED4ext::PluginHandle, const wchar_t*);
         if (inputLoaderModule != nullptr && (pInputLoaderAdd = reinterpret_cast<decltype(pInputLoaderAdd)>(GetProcAddress(inputLoaderModule, "Add"))))
         {
-            const wchar_t* input_path = canonical(GCyberpunkMpLocation / TP_INPUTS_LOCATION).c_str();
-            pInputLoaderAdd(aHandle, input_path);
+            const auto inputPath = canonical(GCyberpunkMpLocation / TP_INPUTS_LOCATION); // ChoomCoop: same dangling c_str() fix
+            pInputLoaderAdd(aHandle, inputPath.c_str());
         }
         else
         {
