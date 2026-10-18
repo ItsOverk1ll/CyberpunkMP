@@ -62,7 +62,16 @@ internal static class Program
     private static int Main(string[] argv)
     {
         Directory.CreateDirectory(DataDir);
-        s_log = new StreamWriter(Path.Combine(DataDir, "setup.log"), append: true) { AutoFlush = true };
+        try
+        {
+            // Shared, so a second setup window (e.g. the first still waiting on "Press Enter") can log too.
+            var stream = new FileStream(Path.Combine(DataDir, "setup.log"), FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+            s_log = new StreamWriter(stream) { AutoFlush = true };
+        }
+        catch (IOException)
+        {
+            s_log = null; // console output still works
+        }
         ParseArgs(argv);
 
         try
