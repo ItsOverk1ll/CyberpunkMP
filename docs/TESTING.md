@@ -29,8 +29,10 @@ public CyberpunkMP server list, offline since upstream stopped; it doesn't affec
 connections. Ignore it.
 
 **Connecting in game:** after loading a save, hold **`/`** (the "Connect to server" input hint) for half
-a second, **once**. Pressing it again used to drop a live connection; it's now ignored
-while connected.
+a second, **once**. `/` is also **disconnect** while connected (same key,
+upstream binding), so don't hold it twice. After a world reload (loading a save, the
+prologue ending) the on-screen hint may say "Connect" again while you're still connected;
+hold `/` once and it re-syncs instead of reconnecting.
 
 ---
 

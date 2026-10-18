@@ -451,7 +451,12 @@ void NetworkWorldSystem::Connect()
     const auto pNetworkService = Core::Container::Get<NetworkService>();
     if (pNetworkService->IsConnected())
     {
-        spdlog::info("[NetworkWorldSystem] Connect ignored: already connected");
+        // After a world reload (e.g. the prologue ending) the multiplayer UI is recreated with
+        // "not connected" and offers Connect again. Re-run the scripted OnConnected, which only
+        // sets the UIMultiplayerConnectedToServer blackboard flag, so the UI catches up.
+        spdlog::info("[NetworkWorldSystem] Connect ignored: already connected - resyncing UI state");
+        RED4ext::StackArgs_t args;
+        ExecuteFunction(this, this->GetNativeType()->GetFunction("OnConnected"), nullptr, args);
         return;
     }
 
