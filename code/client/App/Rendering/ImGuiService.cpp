@@ -4,6 +4,7 @@
 #include "win32.h"
 #include "App/Application.h"
 #include "App/Debugging/DebugService.h"
+#include "App/Settings.h"
 
 namespace App
 {
@@ -18,6 +19,16 @@ ImGuiService::~ImGuiService()
 
 void ImGuiService::OnRenderInit()
 {
+    // ChoomCoop: unless launched with --debug-overlay, create nothing on the game's D3D12
+    // device and never submit work at present time. Upstream recorded and executed a command
+    // list every frame for a hidden overlay; it is a suspect for GPU crashes and conflicts
+    // with CET's overlay. Idea from ofmiceandcam98-eng/CyberpunkMP d014c94. See DECISIONS.md.
+    if (!Settings::Get().debugOverlay)
+    {
+        spdlog::info("[ImGuiService] debug overlay off (launch with --debug-overlay to enable) - no rendering");
+        return;
+    }
+
     Microsoft::WRL::ComPtr<ID3D12Device> pDevice;
     if (FAILED(GetSwapChain()->GetDevice(IID_PPV_ARGS(&pDevice))))
     {

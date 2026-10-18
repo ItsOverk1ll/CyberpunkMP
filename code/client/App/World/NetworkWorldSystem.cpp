@@ -446,8 +446,18 @@ void NetworkWorldSystem::OnInitialize(const RED4ext::JobHandle& aJob)
 
 void NetworkWorldSystem::Connect()
 {
+    // ChoomCoop: Connect() closes the current connection first, so pressing "connect" again
+    // while connected dropped a live session (seen in testing as "Disconnected from server 4").
+    const auto pNetworkService = Core::Container::Get<NetworkService>();
+    if (pNetworkService->IsConnected())
+    {
+        spdlog::info("[NetworkWorldSystem] Connect ignored: already connected");
+        return;
+    }
+
     auto address = fmt::format("{}:{}", Settings::Get().ip, Settings::Get().port);
-    Core::Container::Get<NetworkService>()->Connect(address);
+    spdlog::info("[NetworkWorldSystem] Connecting to {}", address);
+    pNetworkService->Connect(address);
 }
 
 void NetworkWorldSystem::Disconnect()

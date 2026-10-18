@@ -28,6 +28,10 @@ void Settings::Load()
             settings.mods.push_back(mod.c_str());
     }
 
+    // ChoomCoop: opt-in debug overlay (off by default: no rendering work at all).
+    if (launchParameters.Contains("-debug-overlay"))
+        settings.debugOverlay = true;
+
     if (launchParameters.Contains("-rpc"))
     {
         settings.RpcOnly = true;

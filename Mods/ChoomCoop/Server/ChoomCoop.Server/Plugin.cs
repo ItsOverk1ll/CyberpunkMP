@@ -11,7 +11,7 @@ namespace ChoomCoopSystem
     {
         public static Plugin Instance { get; }
 
-        internal static readonly Logger Log = new("ChoomCoop");
+        internal static readonly CoopLog Log = new();
 
         static Plugin()
         {

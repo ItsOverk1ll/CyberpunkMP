@@ -23,6 +23,7 @@ struct Settings
     Vector<fs::path> mods = {};
     bool enabled = false;
     bool RpcOnly = false;
+    bool debugOverlay = false; // ChoomCoop: --debug-overlay, see ImGuiService::OnRenderInit
     fs::path RpcPath{};
 
 private:

@@ -2,6 +2,20 @@
 
 Short log: date, decision, why, alternatives.
 
+## 2026-10-18 — First host test: three fixes
+Wyatt's first host session (logs read from his PC): scripts compiled, the client connected,
+then dropped with reason 4 (`kAborted`) and reconnected repeatedly; later a DX12 GPU crash.
+- **Upstream edit, `NetworkWorldSystem::Connect`:** ignore while already connected.
+  `Connect()` closes the live connection first, so pressing the connect key again killed the
+  session.
+- **Upstream edit, `ImGuiService::OnRenderInit` + `Settings`:** the debug overlay is
+  opt-in (`--debug-overlay`). Without it the mod creates no D3D12 objects and submits no
+  work at present. Upstream ran a command list every frame for a hidden overlay. This is a
+  *suspect* for the GPU crash (the fork made the same change after a similar report), not a
+  proven cause. Idea from ofmiceandcam98-eng/CyberpunkMP d014c94.
+- **ChoomCoop:** `CoopLog` writes `logs/ChoomCoop-session.log` flushed per line; the SDK's
+  per-plugin log file was empty whenever the server window was closed.
+
 ## 2026-10-18 — Tester installer: ChoomCoopSetup.exe
 - **Decision:** a self-contained single-file .NET console app (`Mods/ChoomCoop/Installer`)
   that embeds our build and downloads the six frameworks from their official releases with

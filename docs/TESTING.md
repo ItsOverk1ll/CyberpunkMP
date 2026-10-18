@@ -16,13 +16,21 @@ Use **throwaway test saves**, never your real playthrough.
 | redscript compile errors | `<game>/r6/logs/redscript_rCURRENT.log` (+ a popup if compile fails) |
 | ChoomCoop client lines | CET console (overlay key, default `~`), lines starting `[ChoomCoop:` |
 | CET console log file | `<game>/bin/x64/plugins/cyber_engine_tweaks/cyber_engine_tweaks.log` and `scripting.log` |
-| Server | the server console window, plus `<server>/logs/Server.log` |
+| Server | the server console window, plus `<server>/logs/Server.log` and `<server>/logs/ChoomCoop-session.log` (always flushed) |
 
 `<game>` = your Cyberpunk 2077 folder (contains `bin/`, `r6/`, `red4ext/`).
 `<server>` = `P:\CyberpunkMP\distrib\launcher\server` (or `build\windows\x64\releasedbg`).
 
 Plugin-specific server log files (`logs/ChoomCoop.log`) may stay empty until the server
-exits cleanly; the server console always shows `[Plugin:ChoomCoop]` lines.
+exits cleanly; use `ChoomCoop-session.log` instead.
+
+The server prints `Server could not reach the server list!` every minute. That's the
+public CyberpunkMP server list, offline since upstream stopped; it doesn't affect direct
+connections. Ignore it.
+
+**Connecting in game:** after loading a save, hold **`/`** (the "Connect to server" input hint) for half
+a second, **once**. Pressing it again used to drop a live connection; it's now ignored
+while connected.
 
 ---
 

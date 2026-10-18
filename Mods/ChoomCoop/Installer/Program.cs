@@ -100,6 +100,9 @@ internal static class Program
 
         if (Process.GetProcessesByName("Cyberpunk2077").Length > 0)
             throw new InvalidOperationException("Cyberpunk 2077 is running. Close it and run setup again.");
+        // A running server locks its plugin DLLs, so replacing them would fail halfway through.
+        if (Process.GetProcessesByName("Server.Loader").Length > 0)
+            throw new InvalidOperationException("The Choom Co-op server is running. Close its window and run setup again.");
 
         var role = Ask("role", "Are you the HOST (runs the server) or a GUEST? [host/guest]", "guest").ToLowerInvariant();
         if (role != "host" && role != "guest")
