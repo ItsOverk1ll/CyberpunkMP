@@ -14,6 +14,9 @@ $mod = Join-Path $distrib 'launcher\mod'
 $scripts = Join-Path $distrib 'choomcoop\r6\scripts\ChoomCoop'
 $server = Join-Path $distrib 'launcher\server'
 
+& (Join-Path $here '..\tools\CheckScripts.ps1')
+if ($LASTEXITCODE -ne 0) { throw 'Redscript check failed - not packaging a build that would disable every script.' }
+
 foreach ($p in @($mod, $scripts, $server)) {
     if (-not (Test-Path $p)) { throw "Missing $p - run 'xmake install -y -o distrib' first." }
 }
