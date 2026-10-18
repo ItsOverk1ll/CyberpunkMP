@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      Compiles the plugin's SDK-free sources (Core/ and Shared/Protocol/) directly instead of
+      referencing the plugin, so `dotnet test` runs without building CyberpunkMP or the game.
+    -->
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\ChoomCoop.Server\Core\**\*.cs" Link="Plugin\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+        <Compile Include="..\..\Shared\Protocol\*.cs" Link="Shared\Protocol\%(Filename)%(Extension)" />
+        <None Include="..\..\Shared\Protocol\Protocol.reds" Link="Shared\Protocol\Protocol.reds" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+</Project>

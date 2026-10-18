@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+      The CyberpunkMP loader only loads plugins/<Name>/<Name>.dll whose name ends in "System"
+      and which contains the type <Name>.Plugin, so the assembly is ChoomCoopSystem.
+    -->
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>ChoomCoopSystem</AssemblyName>
+        <RootNamespace>ChoomCoopSystem</RootNamespace>
+        <Version>0.0.1</Version>
+        <NoWarn>1701;1702;3270</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\code\server\scripting\CyberpunkSdk\CyberpunkSdk.csproj">
+            <Private>false</Private>
+        </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\..\Shared\Protocol\*.cs" Link="Shared\Protocol\%(Filename)%(Extension)" />
+    </ItemGroup>
+
+</Project>

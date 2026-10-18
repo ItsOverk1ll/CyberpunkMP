@@ -50,6 +50,7 @@ includes("code/netpack")
 includes("code/common")
 includes("code/protocol")
 includes("code/server")
+includes("Mods/ChoomCoop") -- Choom Co-op (see docs/DECISIONS.md)
 
 option("game")
     set_showmenu(true)

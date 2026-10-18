@@ -29,21 +29,46 @@ A seamless, Dying Light 2–style co-op mod for Cyberpunk 2077, built as a layer
 - ArchiveXL / TweakXL / Codeware where needed
 - WolvenKit (Wyatt's side) for inspecting quest/scene files
 
-## Build (verify and update this section during Phase 0)
-- Upstream: `xmake -y` from repo root (add `-v` for verbose).
-- VS solution: `xmake project -k vsxmake` → open the `.sln` in `vsxmake/`.
-- Debug against the game: `xmake f --game="C:/.../Cyberpunk2077.exe"`.
-- Upstream README noted a protobuf-cpp build issue; record the fix/workaround here.
-- Server Docker image: `docker build . -t cyberpunkmp`, run with `-p 11778:11778`.
-- ChoomCoop server tests: `dotnet test Mods/ChoomCoop/Server/ChoomCoop.Server.Tests` (create in Phase 0).
+## Build (verified 2026-10-18 on Wyatt's PC; details in docs/ARCHITECTURE_NOTES.md §7)
+One-time machine setup (none of it changes upstream code):
+- Visual Studio 2022 with C++ (MSVC 14.44 works) + Windows SDK **10.0.18362.0** (anything below 10.0.26100).
+- xmake **2.9.9**: `winget install --id Xmake-io.Xmake --version 2.9.9+20250408 --scope user`
+  (2.9.6 picks a bogus `v144` toolset; 3.x untested).
+- Pinned package repo (today's xmake-repo resolves broken versions), once:
+  - `git clone %LOCALAPPDATA%\.xmake\repositories\xmake-repo %LOCALAPPDATA%\xmake-repo-pinned-20241221`
+  - `git -C %LOCALAPPDATA%\xmake-repo-pinned-20241221 checkout 704a10506`
+  - `xmake repo --add --global cpmp-pinned %LOCALAPPDATA%\xmake-repo-pinned-20241221`
+- 7-Zip on PATH (`winget install 7zip.7zip`; xmake's bundled 7z 19.00 fails).
+- pnpm **9** first on PATH for builds (global pnpm here is 12): `npm install --prefix %LOCALAPPDATA%\cpmp-buildtools pnpm@9`.
+- .NET SDK 9 (SdkGenerator needs it; plugins and tests are net8.0).
 
-## Pinned versions (fill in during Phase 0)
-- Cyberpunk 2077: _TBD_
-- RED4ext: _TBD_
-- Cyber Engine Tweaks: _TBD_
-- redscript: _TBD_
-- ArchiveXL / TweakXL / Codeware: _TBD_
-- CyberpunkMP upstream commit: _TBD_
+Build (PowerShell, repo root):
+```
+$env:Path = "$env:LOCALAPPDATA\cpmp-buildtools\node_modules\.bin;C:\Program Files\7-Zip;" + $env:Path
+xmake f --arch=x64 --mode=releasedbg --vs_sdkver=10.0.18362.0 -y
+xmake -y -j 4
+xmake install -y -o distrib   # ends with an Electron launcher packaging error; mod/server are installed before it
+```
+- Outputs: `build/windows/x64/releasedbg/` (server + `plugins/ChoomCoopSystem/`), `distrib/launcher/{mod,server}`,
+  `distrib/choomcoop/r6/scripts/ChoomCoop/`.
+- README's protobuf-cpp issue: resolved by the SDK + repo pins above (protobuf-cpp 28.1, abseil 20240722).
+- Upstream edit: `SdkGenerator.csproj` uses CppSharp 1.1.84 on Windows (see DECISIONS.md). If you see
+  `namespace 'Internal' does not exist`, run SdkGenerator by hand: it hides its errors.
+- Run the server from a real terminal (not redirected) with `CYBERPUNKMP_ADMIN_USERNAME` / `CYBERPUNKMP_ADMIN_PASSWORD`
+  set (any values), or release builds throw at startup.
+- ChoomCoop server tests (no game or native build needed): `dotnet test Mods/ChoomCoop/Server/ChoomCoop.Server.Tests`.
+- VS solution: `xmake project -k vsxmake`. Debug target: `xmake f --game="C:/.../Cyberpunk2077.exe"` (it symlinks the
+  DLL; for real installs copy files as in docs/TESTING.md).
+- Docker server image: `docker build . -t cyberpunkmp`, run with `-p 11778:11778` (not re-verified).
+
+## Pinned versions (what this code targets)
+- Cyberpunk 2077: **2.2** (upstream). Newer patches reportedly don't load it; see ARCHITECTURE_NOTES.md §9.
+- RED4ext: the 2.2-era release (1.26.x, unverified); SDK submodule `f52af6a`
+- Cyber Engine Tweaks: 2.2-era (1.34.x, unverified)
+- redscript: 2.2-era (0.5.2x, unverified)
+- ArchiveXL 1.18.1-beta (+6) / TweakXL 1.10.6 / Codeware 1.13.0 (submodules)
+- Input Loader 0.2.0 (required by the client DLL)
+- CyberpunkMP upstream commit: `0ccb0cfa78222cc463ea937e0c8271060f9afd2a` (2024-12-21; upstream inactive since)
 
 ## Key docs
 - `PLAN.md` — design, roadmap, exit criteria
@@ -51,6 +76,13 @@ A seamless, Dying Light 2–style co-op mod for Cyberpunk 2077, built as a layer
 - `docs/PROTOCOL.md` — all RPCs/messages
 - `docs/TESTING.md` — manual in-game test scripts
 - `docs/DECISIONS.md` — short decision log (date, decision, why, alternatives)
+- `docs/PHASE1_PROPOSAL.md` — Phase 1 plan awaiting Wyatt's review
+
+## Code facts that bite
+- Our code: `Mods/ChoomCoop/` (upstream lives in lowercase `code/`). Server plugin assembly must be `ChoomCoopSystem`.
+- RPC ids are FNV-1a 64 hashes; stubs are hand-written, ids in `Shared/Protocol/RpcIds.cs`, checked by tests.
+- `ClientRpc` methods run with a null `this`. A single bad `.reds` file disables ALL scripts.
+- Server logic that needs tests goes in `ChoomCoop.Server/Core/` with no CyberpunkSdk references.
 
 ## Current phase
 **Phase 0 — Foundation & research.** See `PLAN.md` §6.
