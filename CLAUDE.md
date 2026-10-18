@@ -57,6 +57,11 @@ xmake install -y -o distrib   # ends with an Electron launcher packaging error; 
 - Run the server from a real terminal (not redirected) with `CYBERPUNKMP_ADMIN_USERNAME` / `CYBERPUNKMP_ADMIN_PASSWORD`
   set (any values), or release builds throw at startup.
 - ChoomCoop server tests (no game or native build needed): `dotnet test Mods/ChoomCoop/Server/ChoomCoop.Server.Tests`.
+- **Redscript check before any test build:** `.\Mods\ChoomCoop\tools\CheckScripts.ps1` compiles all scripts against the
+  game's bundle with the redscript CLI (no game launch). `Mods\ChoomCoop\Installer\build.ps1` runs it and builds
+  `dist\ChoomCoopSetup.exe` (see docs/TESTING.md).
+- Redscript can't `@wrapMethod` classes declared in another mod's source (e.g. CyberpunkMP's `NetworkWorldSystem`);
+  use its blackboard flags/events instead.
 - VS solution: `xmake project -k vsxmake`. Debug target: `xmake f --game="C:/.../Cyberpunk2077.exe"` (it symlinks the
   DLL; for real installs copy files as in docs/TESTING.md).
 - Docker server image: `docker build . -t cyberpunkmp`, run with `-p 11778:11778` (not re-verified).
