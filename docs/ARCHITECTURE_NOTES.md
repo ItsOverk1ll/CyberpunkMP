@@ -17,22 +17,25 @@ Last updated: 2026-10-18 (Phase 0).
 (2024-12-21, "Merge pull request #51"). Our fork `ItsOverk1ll/CyberpunkMP` has no
 upstream commits on top of this. Upstream has had **no commits since 2024-12-21**.
 
-**Game version upstream targets: patch 2.2** (PR #48 "fix(Client): support patch 2.2",
-2024-12-18). An active fork, `ofmiceandcam98-eng/CyberpunkMP` ("Night City Online",
-1,018 commits ahead, last push 2026-10-14), says plainly that **upstream does not start
-on current game versions** and carries the fixes for patch **2.31**. See §9.
+**Game version:** upstream targeted **patch 2.2** (PR #48, 2024-12-18) and does not start
+on current patches. The active fork `ofmiceandcam98-eng/CyberpunkMP` ("Night City Online",
+1,018 commits ahead, last push 2026-10-14) runs on **2.31**. We target **2.31** (Wyatt, Steam)
+by porting only its compatibility and crash fixes (branch `phase0/patch-2.31`,
+`docs/DECISIONS.md`). The key one: RedLib's type-name resolution handed
+`NetworkWorldSystem` its base class's name, so script validation failed and RED4ext refused
+to start the game (`code/client/Red/TypeInfo/Resolving.hpp`).
 
-| Component | Version pinned by this repo | Source |
+| Component | Version | Source |
 |---|---|---|
-| Cyberpunk 2077 | 2.2 | PR #48 commit message |
-| RED4ext.SDK | `f52af6a` (submodule `vendor/RED4ext.SDK`, tiltedphoques fork) | `git submodule status` |
-| Codeware | v1.13.0 | `vendor/Codeware` submodule tag |
-| TweakXL | v1.10.6 | `vendor/TweakXL` submodule tag |
-| ArchiveXL | v1.18.1-beta (+6 commits, `6f649ae`) | `vendor/ArchiveXL` submodule |
-| Input Loader | v0.2.0 (hard requirement, the plugin refuses to load without it) | `code/client/Main.cpp` |
-| RED4ext (loader) | not pinned in repo; the release for 2.2 was 1.26.x | inferred, **verify** |
-| CET | not pinned; 1.34.x was the 2.2 line | inferred, **verify** |
-| redscript | not pinned; 0.5.2x was current for 2.2 | inferred, **verify** |
+| Cyberpunk 2077 | 2.31 | Wyatt; fork README |
+| RED4ext (loader) | 1.29.1 | fork `publish/INSTALL.txt` |
+| redscript | 0.5.31 | same |
+| Codeware | 1.18.0 (runtime); v1.13.0 submodule for build headers | same; `vendor/Codeware` |
+| ArchiveXL | 1.26.0 (runtime); 1.18.1-beta submodule | same |
+| TweakXL | 1.11.1 (runtime); 1.10.6 submodule | same |
+| Input Loader | 0.2.3 (hard requirement, the plugin refuses to load without it) | same; `code/client/Main.cpp` |
+| CET | keep **off** in MP sessions (GPU hard-lock with CyberpunkMP's overlay, per the fork) | fork release notes |
+| RED4ext.SDK | `f52af6a` (submodule, tiltedphoques fork) | `git submodule status` |
 | .NET | SDK/plugins net8.0; SdkGenerator net9.0 (our change) | csproj files |
 
 ---
@@ -423,10 +426,15 @@ NPC records keep combat AI unless suppressed. Probe P5.
 
 ## 9. Open risks found in Phase 0
 
-1. **Game version.** Upstream targets 2.2. On a current game (2.31+) it reportedly does
-   not start. Options: (a) rebase onto `ofmiceandcam98-eng/CyberpunkMP` (2.31, same
-   license); (b) downgrade the game to 2.2 (Steam depot downloader; GOG offers old
-   installers). Wyatt to decide.
+1. **Game version.** Decided: 2.31 via selective port of the Night City Online fixes.
+   Their remaining known issues (wrong-gender remote appearance from a bad capture,
+   occasional crashes) may also exist here. Our vehicle-thread fix is our own and untested.
+   Each future game patch can break the native side again; watch that fork for fixes.
+4. **Threading.** Natives called from redscript can arrive on game job threads. Anything
+   touching the flecs world must be marshalled with `ThreadService::RunInMainThread`
+   (the fork's long crash hunt, `docs/MAP.md` in their repo).
+5. **CET.** Two ImGui overlays on one swapchain hard-locked GPUs in the fork. CET stays off
+   in MP tests until we port their "no D3D12 objects when the overlay is off" change.
 2. Hand-written RPC stubs rely on the mangled-name hash rule; verified against one example.
    The `--rpc` run in the Phase 0 test confirms it.
 3. Redscript cannot be compile-checked on this machine (no game install here), so the first

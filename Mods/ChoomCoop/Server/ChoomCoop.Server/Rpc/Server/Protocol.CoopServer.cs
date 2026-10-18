@@ -24,5 +24,16 @@ public static partial class CoopServer
 	}
 
 	public static partial void Ping_Impl(ulong playerId, uint protocolVersion, uint nonce);
+
+	[ServerRpc(Class = RpcIds.CoopServerClassId, Function = RpcIds.PongAckId)]
+	public static void PongAck(ulong playerId, IBuffer data)
+	{
+		var protocolVersion = data.ReadUint32();
+		var nonce = data.ReadUint32();
+
+		PongAck_Impl(playerId, protocolVersion, nonce);
+	}
+
+	public static partial void PongAck_Impl(ulong playerId, uint protocolVersion, uint nonce);
 }
 }

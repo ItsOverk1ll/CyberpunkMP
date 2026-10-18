@@ -28,14 +28,26 @@ exits cleanly; the server console always shows `[Plugin:ChoomCoop]` lines.
 
 ## How to install the dev build into the game
 
-**Prerequisites (once, both PCs).** Game version matching the build (see the warning
-below), plus these frameworks from their GitHub release pages (links in `README.md`):
-RED4ext, Cyber Engine Tweaks, redscript, ArchiveXL, TweakXL, Codeware, Input Loader.
-Install each per its own instructions and start the game once to confirm it runs.
+**Prerequisites (once, both PCs).** Game patch **2.31** plus exactly these versions, from
+each project's GitHub releases page (links in `README.md`; Input Loader is
+`jackhumbert/cyberpunk2077-input-loader`):
 
-> **Warning: game version.** This build is upstream CyberpunkMP, which targets game
-> patch **2.2**. On a newer patch it will most likely not load. Check the main-menu version
-> before testing; see `docs/ARCHITECTURE_NOTES.md` §9.
+| Framework | Version |
+|---|---|
+| RED4ext | 1.29.1 |
+| redscript | 0.5.31 |
+| Codeware | 1.18.0 |
+| ArchiveXL | 1.26.0 |
+| TweakXL | 1.11.1 |
+| Input Loader | 0.2.3 |
+
+Install each per its instructions, start the game once single-player to confirm it runs.
+
+> **CET must be OFF for multiplayer sessions.** CET's overlay plus CyberpunkMP's overlay
+> have hard-locked GPUs. Disable it by renaming `<game>\bin\x64\version.dll` to
+> `version.dll.off` (rename back to re-enable). CET is only for the probe sessions below.
+
+> Use dedicated test saves. If you have other mods installed, move them out for testing.
 
 **Build (dev PC):**
 
@@ -54,7 +66,8 @@ has a fresh timestamp.)
    `<game>\red4ext\plugins\zzzCyberpunkMP\`. Copy, don't symlink: the plugin looks for
    `assets\redscript` beside its own path.
 2. Copy `distrib\choomcoop\r6\scripts\ChoomCoop\` into `<game>\r6\scripts\ChoomCoop\`.
-3. Optional (probes): copy `Mods\ChoomCoop\CET\ChoomCoopProbes\` into
+3. Probes only (separate session, see the end of this file): copy
+   `Mods\ChoomCoop\CET\ChoomCoopProbes\` into
    `<game>\bin\x64\plugins\cyber_engine_tweaks\mods\ChoomCoopProbes\`.
 
 **Server (host PC only):** run `distrib\launcher\server\Server.Loader.exe` from a normal
@@ -91,34 +104,41 @@ is unverified for this game; prefer two PCs.)
    - [ ] `[Plugin:ChoomCoop] [ChoomCoop:Core] Server plugin loaded v0.0.1`
    - [ ] `[Plugin:SDK] Loaded Plugin: ChoomCoopSystem`
    (Already verified headless on the dev PC on 2026-10-18.)
-2. **Host joins.** Start game A with `--online --ip=127.0.0.1`. Load the host test save.
+2. **Host joins.** CET off. Start game A with `--online --ip=127.0.0.1`. Load the host
+   test save.
+   - [ ] The game reaches the main menu (if it closes or errors at startup, send
+     `red4ext/logs/red4ext-*.log`).
    - [ ] `red4ext/logs/red4ext-*.log` shows CyberpunkMP loaded (no "failed to load").
    - [ ] No redscript compile-error popup. If one appears, copy its text and
      `r6/logs/redscript_rCURRENT.log`, then stop.
    - [ ] Server console: `[ChoomCoop:Session] Player joined id=<n> name=<name>`
-   - [ ] CET console (open overlay): `[ChoomCoop:Core] Client scripts loaded v0.0.1 protocol v1`
-3. **Ping/Pong (host).** About 3 seconds after connecting:
-   - [ ] CET console: `[ChoomCoop:Net] Connected to server, Ping scheduled in 3s`
-   - [ ] CET console: `[ChoomCoop:Net] Ping sent nonce=<N> protocol=1`
-   - [ ] Server console: `[ChoomCoop:Net] Ping from player=<id> nonce=<N> protocol=1 -> Pong`
-   - [ ] CET console: `[ChoomCoop:Net] Pong received nonce=<N> serverProtocol=1` (same N)
+3. **Ping/Pong round trip (host).** About 3 seconds after connecting, in the **server
+   console** (this proves the client scripts loaded and both RPC directions work):
+   - [ ] `[ChoomCoop:Net] Ping from player=<id> nonce=<N> protocol=1 -> Pong`
+   - [ ] `[ChoomCoop:Net] PongAck from player=<id> nonce=<N> protocol=1 -> round trip OK` (same N)
+   (The client also logs `[ChoomCoop:Core] Client scripts loaded`, `Ping sent` and
+   `Pong received` lines, but only CET shows them, and CET is off.)
 4. **Guest joins.** Start game B with `--online --ip=<host IP>`, load the guest test save.
-   - [ ] Server: second `Player joined` line. Steps 2-3 lines appear on the guest's CET console too.
+   - [ ] Server: second `Player joined` line, then Ping and PongAck lines for the guest's id.
 5. **See each other.** Walk both characters to the same spot (e.g. both fast travel to
    the same point, or load saves in the same district; players far apart are not synced).
    - [ ] Host sees the guest's character move; guest sees the host.
    - [ ] Appearance roughly matches (body, clothes).
-6. **Leave.** Guest quits to the main menu.
+6. **Vehicle (tests our threading fix).** Host gets in a car and drives 100 m; guest
+   watches. Then guest gets in as passenger if possible. Host exits.
+   - [ ] No crash on either PC; the guest sees the car move with the host in it.
+7. **Leave.** Guest quits to the main menu.
    - [ ] Server: `[ChoomCoop:Session] Player left id=<n>`; host no longer sees the guest.
-7. **RPC stub check (once, either PC, server not needed).** Launch the game with
+8. **RPC stub check (once, either PC, server not needed).** Launch the game with
    `--online --rpc --rpcdir="C:\temp\cpmp-rpc"`. It exits by itself after loading.
    - [ ] Send me `C:\temp\cpmp-rpc\Server\Protocol.CoopServer.cs` and
      `C:\temp\cpmp-rpc\Client\Protocol.CoopClient.cs`. I'll compare their ids with
      `Shared/Protocol/RpcIds.cs`. (If the folder is empty, send `CyberpunkMP.log`.)
 
-**What to send back:** pass/fail per checkbox, the server console text, the CET console
-lines starting with `[ChoomCoop`, and any error popups. If something fails, also
-`red4ext-*.log`, `CyberpunkMP.log` and `redscript_rCURRENT.log`.
+**What to send back:** pass/fail per checkbox, the whole server console text, and any
+error popups. Always also `red4ext-*.log` and `CyberpunkMP.log` from both PCs (they show
+spawn/appearance/vehicle lines), plus `redscript_rCURRENT.log` if scripts misbehave. If a
+game crashes, note roughly what was happening (spawn, car, shooting) and the time.
 
 Results:
 | Date | Build (commit) | Game version | Result | Notes |
@@ -129,9 +149,11 @@ Results:
 
 ## Phase 0 research probes
 
-These answer engine questions that can't be settled without running the game. Install the
-probe CET mod (step 3 of the install), load a test save **single-player is fine (no
-`--online` needed)**, open the CET overlay and press the buttons. Send back every
+These answer engine questions that can't be settled without running the game. They need
+CET but not multiplayer, so run them in a **separate single-player session with
+CyberpunkMP removed** (move `<game>\red4ext\plugins\zzzCyberpunkMP\` and
+`<game>\r6\scripts\ChoomCoop\` out temporarily) and CET enabled. Install the probe CET mod
+(step 3 of the install), load a test save, open the CET overlay and press the buttons. Send back every
 `[ChoomCoop:Probe]` line plus what you saw. Probe code:
 `Mods/ChoomCoop/CET/ChoomCoopProbes/init.lua`.
 

@@ -17,5 +17,10 @@ namespace Cyberpunk.Rpc.Server.Protocol
 
             CoopClient.Pong(playerId, reply.ProtocolVersion, reply.Nonce, reply.Accepted);
         }
+
+        public static partial void PongAck_Impl(ulong playerId, uint protocolVersion, uint nonce)
+        {
+            Plugin.Log.Info($"[ChoomCoop:Net] PongAck from player={playerId} nonce={nonce} protocol={protocolVersion} -> round trip OK");
+        }
     }
 }

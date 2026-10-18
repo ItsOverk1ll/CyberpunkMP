@@ -2,6 +2,41 @@
 
 Short log: date, decision, why, alternatives.
 
+## 2026-10-18 — Target game patch 2.31; port fixes from Night City Online selectively
+- **Decision:** stay on upstream CyberpunkMP and port only the game-compatibility and crash
+  fixes from `ofmiceandcam98-eng/CyberpunkMP` (branch `phase0/patch-2.31`):
+  - `9732c46` (as-is minus build files): RTTI name resolution (the game would not start on
+    2.31), worldTransform positions, spawn/appearance null guards, PuppetRegistry.
+  - `c346f5a` (code only): appearance use-after-free and ccstate under-run.
+  - `58881c8` (core only, rewritten): dangling `c_str()` in `Main.cpp`.
+  - Vehicle threading race diagnosed in `0fa2bb9`: fixed our own way (below).
+- **Not taken:** protobuf 29.3 pin (our pinned repo gives a working 28.1); `fbb7b33`
+  (needs fork-only code, and its trigger is the fork's inventory autosave); `5159dc4`
+  (RPC table sizing: defensive, ids are dense today; revisit if we see unknown-id logs);
+  `d014c94` and its prerequisites (no D3D12 objects when the overlay is off — needed for CET
+  compatibility, deeper change); everything else (launcher, Discord, phone, persistence).
+- **Why:** Wyatt is on Steam 2.31. Starting from scratch would cost months for netcode we
+  already have; rebasing onto the fork would pull in ~1,000 commits of RP-server features.
+  Each port keeps the original author and is credited in the commit message.
+- **Alternatives:** full rebase onto the fork (revisit if we keep needing its fixes);
+  downgrade the game to 2.2.
+
+## 2026-10-18 — Upstream edit: vehicle callbacks and ThreadService run on the main thread
+- **Decision:** `VehicleSystem::OnVehicleEnter/Exit/Ready` defer their bodies with
+  `ThreadService::RunInMainThread`; `ThreadService::OnGameUpdate` pops and runs tasks outside
+  the queue lock.
+- **Why:** redscript-called natives can arrive on job threads and these touch the
+  single-threaded flecs world (the fork caught it crashing the client). The fork's fix
+  needs a 169-line registry from later commits; upstream already has the main-thread queue.
+  Running tasks outside the lock lets a task queue another without deadlocking.
+- **Risk:** enter/exit now take effect one frame later. Needs an in-game vehicle test.
+
+## 2026-10-18 — Multiplayer tests run without CET; the server log is the witness
+- **Decision:** add `CoopServer.PongAck` (client confirms it received Pong) so the server
+  console proves the whole round trip. Protocol stays v1 (nothing has shipped yet).
+- **Why:** CET's overlay plus CyberpunkMP's renderer hard-locked GPUs in the fork, and our
+  client logging otherwise only shows in the CET console.
+
 ## 2026-10-18 — Build toolchain pins (no upstream code changes)
 - **Decision:** build with xmake 2.9.9, a local xmake-repo clone pinned to `704a10506`
   (2024-12-21) registered with `xmake repo --add --global`, Windows SDK 10.0.18362.0,

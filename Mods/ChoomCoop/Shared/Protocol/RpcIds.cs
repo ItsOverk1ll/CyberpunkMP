@@ -15,10 +15,12 @@ namespace ChoomCoop.Shared.Protocol
         public const string CoopServerClass = "ChoomCoop.Protocol.CoopServer";
         public const string CoopClientClass = "ChoomCoop.Protocol.CoopClient";
         public const string PingFunction = "Ping";
+        public const string PongAckFunction = "PongAck";
         public const string PongFunction = "Pong;Uint32Uint32Bool";
 
         public const ulong CoopServerClassId = 10360736183100188576;
         public const ulong PingId = 16843147157235268489;
+        public const ulong PongAckId = 4526983376871699560;
         public const ulong CoopClientClassId = 14946371136643445460;
         public const ulong PongId = 9876348574074121164;
 

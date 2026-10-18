@@ -62,13 +62,14 @@ xmake install -y -o distrib   # ends with an Electron launcher packaging error; 
 - Docker server image: `docker build . -t cyberpunkmp`, run with `-p 11778:11778` (not re-verified).
 
 ## Pinned versions (what this code targets)
-- Cyberpunk 2077: **2.2** (upstream). Newer patches reportedly don't load it; see ARCHITECTURE_NOTES.md §9.
-- RED4ext: the 2.2-era release (1.26.x, unverified); SDK submodule `f52af6a`
-- Cyber Engine Tweaks: 2.2-era (1.34.x, unverified)
-- redscript: 2.2-era (0.5.2x, unverified)
-- ArchiveXL 1.18.1-beta (+6) / TweakXL 1.10.6 / Codeware 1.13.0 (submodules)
-- Input Loader 0.2.0 (required by the client DLL)
-- CyberpunkMP upstream commit: `0ccb0cfa78222cc463ea937e0c8271060f9afd2a` (2024-12-21; upstream inactive since)
+- Cyberpunk 2077: **2.31** (Steam). Upstream targeted 2.2; we ported the 2.31 fixes from the Night City Online
+  fork (`ofmiceandcam98-eng/CyberpunkMP`), see DECISIONS.md.
+- Runtime frameworks (the set Night City Online ships for 2.31): RED4ext **1.29.1**, redscript **0.5.31**,
+  Codeware **1.18.0**, ArchiveXL **1.26.0**, TweakXL **1.11.1**, Input Loader **0.2.3**.
+- Cyber Engine Tweaks: **off during multiplayer tests** (CET + CyberpunkMP's overlay caused GPU hard-locks in the
+  fork). Use CET only for single-player probe sessions without CyberpunkMP installed.
+- Build-time submodules: RED4ext.SDK `f52af6a`, ArchiveXL 1.18.1-beta (+6), TweakXL 1.10.6, Codeware 1.13.0.
+- CyberpunkMP upstream commit: `0ccb0cfa78222cc463ea937e0c8271060f9afd2a` (2024-12-21; upstream inactive since).
 
 ## Key docs
 - `PLAN.md` — design, roadmap, exit criteria
@@ -82,6 +83,8 @@ xmake install -y -o distrib   # ends with an Electron launcher packaging error; 
 - Our code: `Mods/ChoomCoop/` (upstream lives in lowercase `code/`). Server plugin assembly must be `ChoomCoopSystem`.
 - RPC ids are FNV-1a 64 hashes; stubs are hand-written, ids in `Shared/Protocol/RpcIds.cs`, checked by tests.
 - `ClientRpc` methods run with a null `this`. A single bad `.reds` file disables ALL scripts.
+- Redscript-called natives may run on job threads: never touch flecs there, use `ThreadService::RunInMainThread`.
+- Don't rely on the CET console for MP tests (CET is off); make the server log prove client behaviour (e.g. PongAck).
 - Server logic that needs tests goes in `ChoomCoop.Server/Core/` with no CyberpunkSdk references.
 
 ## Current phase

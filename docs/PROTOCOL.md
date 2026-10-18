@@ -28,6 +28,18 @@ How that system works: `docs/ARCHITECTURE_NOTES.md` §4.
 | Server | `CoopServer.Ping_Impl` -> `PingHandler.Handle` -> replies with `CoopClient.Pong` |
 | Sent | 3 s after connecting (`NetworkWorldSystem.OnConnected` wrap) |
 
+### `CoopServer.PongAck` (client -> server)
+
+| | |
+|---|---|
+| Since | v1 |
+| Redscript | `CoopServer.PongAck(protocolVersion: Uint32, nonce: Uint32)` |
+| Class id | same as `CoopServer.Ping` |
+| Function id | `hash("PongAck")` = 4526983376871699560 |
+| Fields | `protocolVersion`: sender's version. `nonce`: the nonce from the Pong. |
+| Server | logs `[ChoomCoop:Net] PongAck ... -> round trip OK` |
+| Sent | by `CoopClient.Pong` when `accepted` is true. Exists so the server log proves the full round trip without the CET console. |
+
 ### `CoopClient.Pong` (server -> client)
 
 | | |

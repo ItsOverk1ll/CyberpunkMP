@@ -17,6 +17,9 @@ public abstract class ChoomCoopProtocol {
 // Client -> Server. Implemented on the server by CoopServer.Ping_Impl.
 public native class CoopServer extends ServerRpc {
     public static native func Ping(protocolVersion: Uint32, nonce: Uint32) -> Void;
+    // Sent when a Pong arrives, so the server log proves the full round trip
+    // (the client console may not be available: CET is off during MP tests).
+    public static native func PongAck(protocolVersion: Uint32, nonce: Uint32) -> Void;
 }
 
 // Server -> Client. CyberpunkMP invokes these with no instance: never touch `this`.
@@ -24,6 +27,7 @@ public class CoopClient extends ClientRpc {
     public func Pong(protocolVersion: Uint32, nonce: Uint32, accepted: Bool) -> Void {
         if accepted {
             CoopLog("Net", s"Pong received nonce=\(nonce) serverProtocol=\(protocolVersion)");
+            CoopServer.PongAck(ChoomCoopProtocol.Version(), nonce);
         } else {
             CoopLogError("Net", s"Pong received nonce=\(nonce) but server REJECTED protocol v\(ChoomCoopProtocol.Version()) (server speaks v\(protocolVersion))");
         }

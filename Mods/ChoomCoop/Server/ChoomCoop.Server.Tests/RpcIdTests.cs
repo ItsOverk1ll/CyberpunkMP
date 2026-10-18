@@ -21,6 +21,7 @@ namespace ChoomCoop.Server.Tests
         {
             Assert.Equal(RpcIds.Fnv1a64(RpcIds.CoopServerClass), RpcIds.CoopServerClassId);
             Assert.Equal(RpcIds.Fnv1a64(RpcIds.PingFunction), RpcIds.PingId);
+            Assert.Equal(RpcIds.Fnv1a64(RpcIds.PongAckFunction), RpcIds.PongAckId);
             Assert.Equal(RpcIds.Fnv1a64(RpcIds.CoopClientClass), RpcIds.CoopClientClassId);
             Assert.Equal(RpcIds.Fnv1a64(RpcIds.PongFunction), RpcIds.PongId);
         }
@@ -38,6 +39,7 @@ namespace ChoomCoop.Server.Tests
             Assert.Contains("class CoopServer extends ServerRpc", reds);
             Assert.Contains("class CoopClient extends ClientRpc", reds);
             Assert.Contains("func Ping(protocolVersion: Uint32, nonce: Uint32)", reds);
+            Assert.Contains("func PongAck(protocolVersion: Uint32, nonce: Uint32)", reds);
             Assert.Contains("func Pong(protocolVersion: Uint32, nonce: Uint32, accepted: Bool)", reds);
         }
     }
